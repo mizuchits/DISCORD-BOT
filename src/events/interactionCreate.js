@@ -2,12 +2,24 @@ const logger = require("@turkerssh/logger");
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { getUserData, updateUserData } = require("../data/userData");
 
+const cooldowns = new Map();
+
 module.exports = (client) => {
   console.log("Registering interactionCreate listener...");
   
   // Listener for slash commands
   client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
+
+    if (cooldowns.has(interaction.user.id)) {
+      const remainingTime = cooldowns.get(interaction.user.id) - Date.now();
+      if (remainingTime > 0) {
+        await interaction.reply({ content: `Please wait ${Math.ceil(remainingTime / 1000)} seconds before using this command again.`, ephemeral: true });
+        return;
+      }
+    }
+
+    cooldowns.set(interaction.user.id, Date.now() + 5000); // 5-second cooldown
 
     const command = client.commands.get(interaction.commandName);
     if (!command) {
@@ -209,13 +221,44 @@ module.exports = (client) => {
             break;
 
           case "buy_premium_bait":
-            if (user.coins >= 30) {
-              user.coins -= 30;
+            // Create buttons for selecting quantity
+            const quantityRow = new ActionRowBuilder().addComponents(
+              new ButtonBuilder().setCustomId("buy_premium_bait_1").setLabel("Buy 1").setStyle(ButtonStyle.Primary),
+              new ButtonBuilder().setCustomId("buy_premium_bait_5").setLabel("Buy 5").setStyle(ButtonStyle.Primary),
+              new ButtonBuilder().setCustomId("buy_premium_bait_10").setLabel("Buy 10").setStyle(ButtonStyle.Primary),
+              new ButtonBuilder().setCustomId("buy_premium_bait_20").setLabel("Buy 20").setStyle(ButtonStyle.Primary),
+              new ButtonBuilder().setCustomId("buy_premium_bait_100").setLabel("Buy 100").setStyle(ButtonStyle.Primary)
+            );
+
+            await interaction.reply({
+              content: "How many Premium Baits would you like to buy?",
+              components: [quantityRow],
+              ephemeral: true,
+            });
+            break;
+
+          case "buy_premium_bait_1":
+          case "buy_premium_bait_5":
+          case "buy_premium_bait_10":
+          case "buy_premium_bait_20":
+          case "buy_premium_bait_100":
+            const quantity = parseInt(interaction.customId.split("_").pop()); // Extract quantity from customId
+            const cost = quantity * 30; // Calculate total cost (30 coins per bait)
+
+            if (user.coins >= cost) {
+              user.coins -= cost;
               user.bait = "Premium Bait";
+              user.baitCount += quantity; // Increment bait count
               updateUserData(userId, user);
-              await interaction.reply({ content: "✅ You purchased Premium Bait!", ephemeral: true });
+              await interaction.reply({
+                content: `✅ You purchased ${quantity} Premium Baits! You now have ${user.baitCount} Premium Baits equipped.`,
+                ephemeral: true,
+              });
             } else {
-              await interaction.reply({ content: "❌ You don't have enough coins to buy Premium Bait.", ephemeral: true });
+              await interaction.reply({
+                content: `❌ You don't have enough coins to buy ${quantity} Premium Baits. You need ${cost} coins.`,
+                ephemeral: true,
+              });
             }
             break;
 
@@ -223,8 +266,9 @@ module.exports = (client) => {
             if (user.coins >= 150) {
               user.coins -= 150;
               user.bait = "Golden Bait";
+              user.baitCount += 1; // Increment bait count
               updateUserData(userId, user);
-              await interaction.reply({ content: "✅ You purchased Golden Bait!", ephemeral: true });
+              await interaction.reply({ content: `✅ You purchased Golden Bait! You now have ${user.baitCount} Golden Baits equipped.`, ephemeral: true });
             } else {
               await interaction.reply({ content: "❌ You don't have enough coins to buy Golden Bait.", ephemeral: true });
             }
@@ -234,8 +278,9 @@ module.exports = (client) => {
             if (user.coins >= 400) {
               user.coins -= 400;
               user.bait = "Legendary Bait";
+              user.baitCount += 1; // Increment bait count
               updateUserData(userId, user);
-              await interaction.reply({ content: "✅ You purchased Legendary Bait!", ephemeral: true });
+              await interaction.reply({ content: `✅ You purchased Legendary Bait! You now have ${user.baitCount} Legendary Baits equipped.`, ephemeral: true });
             } else {
               await interaction.reply({ content: "❌ You don't have enough coins to buy Legendary Bait.", ephemeral: true });
             }

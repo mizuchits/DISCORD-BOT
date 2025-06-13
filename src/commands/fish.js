@@ -26,16 +26,57 @@ module.exports = {
       const user = getUserData(userId);
       console.log("User data:", user);
 
-      // Define fishing items based on rod and bait
-      const basicItems = ["🐟 Fish", "🦀 Crab", "🗑️ Trash"];
-      const betterRodItems = ["🐠 Tropical Fish", "🪸 Coral"];
-      const premiumBaitItems = ["🐡 Rare Fish", "🦑 Squid"];
+      // Define fishing items and their base probabilities
+      const lootTable = [
+        { item: "🐟 Fish", baseChance: 15 }, // 50% chance
+        { item: "🦀 Crab", baseChance: 20 }, // 20% chance
+        { item: "🗑️ Trash", baseChance: 50 }, // 15% chance
+        { item: "🐠 Tropical Fish", baseChance: 10 }, // 10% chance
+        { item: "🪸 Coral", baseChance: 5 }, // 5% chance
+        { item: "🐡 Rare Fish", baseChance: 3 }, // 3% chance
+        { item: "🦑 Squid", baseChance: 2 }, // 2% chance
+      ];
 
-      let fishingItems = [...basicItems];
-      if (user.rod === "Better Rod" || user.rod === "Advanced Rod") fishingItems.push(...betterRodItems);
-      if (user.bait === "Premium Bait" || user.bait === "Golden Bait") fishingItems.push(...premiumBaitItems);
+      // Adjust probabilities based on rod and bait
+      lootTable.forEach((loot) => {
+        if (user.rod === "Better Rod") {
+          if (["🐠 Tropical Fish", "🪸 Coral"].includes(loot.item)) loot.baseChance += 5; // Increase chance for better items
+        }
+        if (user.rod === "Advanced Rod") {
+          if (["🐠 Tropical Fish", "🪸 Coral", "🐡 Rare Fish"].includes(loot.item)) loot.baseChance += 10; // Increase chance for rare items
+        }
+        if (user.rod === "Master Rod") {
+          if (["🐠 Tropical Fish", "🪸 Coral", "🐡 Rare Fish", "🦑 Squid"].includes(loot.item)) loot.baseChance += 15; // Significantly increase chance for rare items
+        }
+      });
 
-      console.log("Fishing items:", fishingItems);
+      if (user.baitCount > 0) {
+        console.log(`Applying bait buff: ${user.bait} (${user.baitCount} remaining)`);
+
+        // Apply bait buffs
+        lootTable.forEach((loot) => {
+          if (user.bait === "Premium Bait" && ["🐡 Rare Fish", "🦑 Squid"].includes(loot.item)) {
+            loot.baseChance += 5;
+          }
+          if (user.bait === "Golden Bait" && ["🐡 Rare Fish", "🦑 Squid"].includes(loot.item)) {
+            loot.baseChance += 10;
+          }
+          if (user.bait === "Legendary Bait" && ["🐡 Rare Fish", "🦑 Squid"].includes(loot.item)) {
+            loot.baseChance += 15;
+          }
+        });
+
+        // Decrease bait count
+        user.baitCount -= 1;
+        if (user.baitCount === 0) {
+          user.bait = "None"; // Reset bait when count reaches zero
+        }
+        updateUserData(userId, user);
+      } else {
+        console.log("No bait equipped.");
+      }
+
+      console.log("Adjusted loot table:", lootTable);
 
       // Adjust chances based on rod and bait
       let numberOfItems = 1; // Default number of items
@@ -47,9 +88,17 @@ module.exports = {
       // Reset caughtItems for this interaction
       const caughtItems = [];
       for (let i = 0; i < numberOfItems; i++) {
-        const randomItem = fishingItems[Math.floor(Math.random() * fishingItems.length)];
-        caughtItems.push(randomItem);
-        user.inventory.push(randomItem); // Add to user's inventory
+        const randomRoll = Math.random() * 100; // Generate a random number between 0 and 100
+        let cumulativeChance = 0;
+
+        for (const loot of lootTable) {
+          cumulativeChance += loot.baseChance;
+          if (randomRoll <= cumulativeChance) {
+            caughtItems.push(loot.item);
+            user.inventory.push(loot.item); // Add to user's inventory
+            break;
+          }
+        }
       }
 
       console.log("Caught items:", caughtItems);
@@ -69,7 +118,7 @@ module.exports = {
       // Create an embed to display the newly caught items
       const embed = new EmbedBuilder()
         .setTitle(`🎣 Fishing Game - ${username}`)
-        .setDescription("Here are the items you caught:")
+        .setDescription(`Bait equipped: ${user.bait} (${user.baitCount} remaining)\nHere are the items you caught:`)
         .setColor("#00AAFF");
 
       for (const [item, count] of Object.entries(itemCounts)) {
