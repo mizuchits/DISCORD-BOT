@@ -1,0 +1,53 @@
+{
+  "exampleUserId": {
+    "inventory": [],
+    "coins": 100,
+    "rod": "Basic Rod",
+    "bait": "None"
+  },
+  "904091164209197107": {
+    "inventory": [
+      "🗑️ Trash",
+      "🐟 Fish",
+      "🦀 Crab",
+      "🦀 Crab",
+      "🦀 Crab",
+      "🦀 Crab",
+      "🗑️ Trash",
+      "🗑️ Trash",
+      "🗑️ Trash",
+      "🐟 Fish",
+      "🐟 Fish",
+      "🗑️ Trash",
+      "🐟 Fish",
+      "🐟 Fish",
+      "🗑️ Trash",
+      "🦀 Crab",
+      "🦀 Crab",
+      "🗑️ Trash",
+      "🐟 Fish",
+      "🐟 Fish",
+      "🦀 Crab",
+      "🐟 Fish",
+      "🐟 Fish",
+      "🐟 Fish",
+      "🗑️ Trash",
+      "🦀 Crab",
+      "🦀 Crab",
+      "🦀 Crab",
+      "🦀 Crab",
+      "🗑️ Trash",
+      "🦀 Crab",
+      "🐟 Fish",
+      "🗑️ Trash",
+      "🗑️ Trash",
+      "🐟 Fish",
+      "🗑️ Trash",
+      "🐟 Fish",
+      "🗑️ Trash"
+    ],
+    "coins": 9999999992779,
+    "rod": "Master Rod",
+    "bait": "Legendary Bait"
+  }
+}
