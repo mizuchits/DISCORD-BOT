@@ -8,24 +8,33 @@ const webhook = new WebhookClient({
 });
 
 exports.run = async () => {
-  const manager = new ShardingManager('./src/bot.js', {
+  const manager = new ShardingManager("./src/bot.js", {
     token: config.GeneralInformation.BotToken,
-    totalShards: 'auto',
+    totalShards: "auto",
+    respawn: true,
+    mode: "process",
   });
 
-  manager.on('shardCreate', async (shard) => {
-    console.log(`Shard ${shard.id} launched`);
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // 5-second delay between shard launches
+  manager.on("shardCreate", (shard) => {
+    logger.info({
+      type: "shard",
+      message: `Shard ${shard.id} launched`,
+    });
+
+    webhook.send(
+      `🟢 [<t:${Math.floor(Date.now() / 1000)}:f>]: Shard **#${shard.id}** online!`,
+    );
   });
 
-  manager.spawn().catch(async (err) => {
-    if (err.status === 429) {
-      const retryAfter = err.headers.get('Retry-After') || 5; // Retry after specified time
-      console.log(`Rate limited. Retrying shard spawn after ${retryAfter} seconds.`);
-      await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
-      manager.spawn(); // Retry shard spawning
-    } else {
-      console.error('Error while spawning shards:', err);
-    }
+  manager.spawn().catch((err) => {
+    logger.error({
+      type: "shard",
+      message: "Error while spawning shards",
+    });
+    console.dir(err);
+
+    webhook.send(
+      `🔴 [<t:${Math.floor(Date.now() / 1000)}:f>]: Error while spawning shards!`,
+    );
   });
 };

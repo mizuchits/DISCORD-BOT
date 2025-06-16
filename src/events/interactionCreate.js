@@ -2,24 +2,12 @@ const logger = require("@turkerssh/logger");
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { getUserData, updateUserData } = require("../data/userData");
 
-const cooldowns = new Map();
-
 module.exports = (client) => {
   console.log("Registering interactionCreate listener...");
   
   // Listener for slash commands
   client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
-
-    if (cooldowns.has(interaction.user.id)) {
-      const remainingTime = cooldowns.get(interaction.user.id) - Date.now();
-      if (remainingTime > 0) {
-        await interaction.reply({ content: `Please wait ${Math.ceil(remainingTime / 1000)} seconds before using this command again.`, ephemeral: true });
-        return;
-      }
-    }
-
-    cooldowns.set(interaction.user.id, Date.now() + 5000); // 5-second cooldown
 
     const command = client.commands.get(interaction.commandName);
     if (!command) {
@@ -221,72 +209,67 @@ module.exports = (client) => {
             break;
 
           case "buy_premium_bait":
+          case "buy_golden_bait":
+          case "buy_legendary_bait":
+            // Determine bait type and price
+            const baitType = interaction.customId.split("_")[1]; // Extract bait type (premium, golden, legendary)
+            const baitPrices = {
+              premium: 30,
+              golden: 150,
+              legendary: 400,
+            };
+            const baitPrice = baitPrices[baitType];
+
             // Create buttons for selecting quantity
             const quantityRow = new ActionRowBuilder().addComponents(
-              new ButtonBuilder().setCustomId("buy_premium_bait_1").setLabel("Buy 1").setStyle(ButtonStyle.Primary),
-              new ButtonBuilder().setCustomId("buy_premium_bait_5").setLabel("Buy 5").setStyle(ButtonStyle.Primary),
-              new ButtonBuilder().setCustomId("buy_premium_bait_10").setLabel("Buy 10").setStyle(ButtonStyle.Primary),
-              new ButtonBuilder().setCustomId("buy_premium_bait_20").setLabel("Buy 20").setStyle(ButtonStyle.Primary),
-              new ButtonBuilder().setCustomId("buy_premium_bait_100").setLabel("Buy 100").setStyle(ButtonStyle.Primary)
+              new ButtonBuilder().setCustomId(`buy_${baitType}_1`).setLabel("Buy 1").setStyle(ButtonStyle.Primary),
+              new ButtonBuilder().setCustomId(`buy_${baitType}_5`).setLabel("Buy 5").setStyle(ButtonStyle.Primary),
+              new ButtonBuilder().setCustomId(`buy_${baitType}_10`).setLabel("Buy 10").setStyle(ButtonStyle.Primary),
+              new ButtonBuilder().setCustomId(`buy_${baitType}_20`).setLabel("Buy 20").setStyle(ButtonStyle.Primary),
+              new ButtonBuilder().setCustomId(`buy_${baitType}_100`).setLabel("Buy 100").setStyle(ButtonStyle.Primary)
             );
 
             await interaction.reply({
-              content: "How many Premium Baits would you like to buy?",
+              content: `How many ${baitType.charAt(0).toUpperCase() + baitType.slice(1)} Baits would you like to buy?`,
               components: [quantityRow],
               ephemeral: true,
             });
             break;
 
-          case "buy_premium_bait_1":
-          case "buy_premium_bait_5":
-          case "buy_premium_bait_10":
-          case "buy_premium_bait_20":
-          case "buy_premium_bait_100":
-            const quantity = parseInt(interaction.customId.split("_").pop()); // Extract quantity from customId
-            const cost = quantity * 30; // Calculate total cost (30 coins per bait)
-
-            if (user.coins >= cost) {
-              user.coins -= cost;
-              user.bait = "Premium Bait";
-              user.baitCount += quantity; // Increment bait count
-              updateUserData(userId, user);
-              await interaction.reply({
-                content: `✅ You purchased ${quantity} Premium Baits! You now have ${user.baitCount} Premium Baits equipped.`,
-                ephemeral: true,
-              });
-            } else {
-              await interaction.reply({
-                content: `❌ You don't have enough coins to buy ${quantity} Premium Baits. You need ${cost} coins.`,
-                ephemeral: true,
-              });
-            }
-            break;
-
-          case "buy_golden_bait":
-            if (user.coins >= 150) {
-              user.coins -= 150;
-              user.bait = "Golden Bait";
-              user.baitCount += 1; // Increment bait count
-              updateUserData(userId, user);
-              await interaction.reply({ content: `✅ You purchased Golden Bait! You now have ${user.baitCount} Golden Baits equipped.`, ephemeral: true });
-            } else {
-              await interaction.reply({ content: "❌ You don't have enough coins to buy Golden Bait.", ephemeral: true });
-            }
-            break;
-
-          case "buy_legendary_bait":
-            if (user.coins >= 400) {
-              user.coins -= 400;
-              user.bait = "Legendary Bait";
-              user.baitCount += 1; // Increment bait count
-              updateUserData(userId, user);
-              await interaction.reply({ content: `✅ You purchased Legendary Bait! You now have ${user.baitCount} Legendary Baits equipped.`, ephemeral: true });
-            } else {
-              await interaction.reply({ content: "❌ You don't have enough coins to buy Legendary Bait.", ephemeral: true });
-            }
-            break;
-
           default:
+            // Dynamically handle bait purchase buttons
+            if (interaction.customId.startsWith("buy_premium_bait") ||
+                interaction.customId.startsWith("buy_golden_bait") ||
+                interaction.customId.startsWith("buy_legendary_bait")) {
+              await interaction.deferReply({ ephemeral: true }); // Acknowledge the interaction immediately
+
+              const [baitTypeSelected, quantitySelected] = interaction.customId.split("_").slice(1); // Extract bait type and quantity
+              const baitPricesSelected = {
+                premium: 30,
+                golden: 150,
+                legendary: 400,
+              };
+              const baitPriceSelected = baitPricesSelected[baitTypeSelected];
+              const quantityNumber = parseInt(quantitySelected); // Convert quantity to number
+              const cost = quantityNumber * baitPriceSelected; // Calculate total cost
+
+              if (user.coins >= cost) {
+                user.coins -= cost;
+                user.bait = `${baitTypeSelected.charAt(0).toUpperCase() + baitTypeSelected.slice(1)} Bait`;
+                user.baitCount += quantityNumber; // Increment bait count
+                updateUserData(userId, user);
+                await interaction.editReply({
+                  content: `✅ You purchased ${quantityNumber} ${baitTypeSelected.charAt(0).toUpperCase() + baitTypeSelected.slice(1)} Baits! You now have ${user.baitCount} ${baitTypeSelected.charAt(0).toUpperCase() + baitTypeSelected.slice(1)} Baits equipped.`,
+                });
+              } else {
+                await interaction.editReply({
+                  content: `❌ You don't have enough coins to buy ${quantityNumber} ${baitTypeSelected.charAt(0).toUpperCase() + baitTypeSelected.slice(1)} Baits. You need ${cost} coins.`,
+                });
+              }
+              return;
+            }
+
+            // Default case for unknown button actions
             await interaction.reply({ content: "❌ Unknown button action.", ephemeral: true });
             break;
         }

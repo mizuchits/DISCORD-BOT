@@ -4,7 +4,7 @@ créer a partir d'un template
 ## 📦 Installation
 1. Clone the repository.
 ```sh
-$ git clone https://github.com/turkerssh/discord.js-v14-bot-template.git
+$ git clone https://github.com/mizuchits/DISCORD-BOT.git
 ```
 2. Install the dependencies.
 ```sh
