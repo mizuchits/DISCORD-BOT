@@ -220,57 +220,15 @@ module.exports = (client) => {
             };
             const baitPrice = baitPrices[baitType];
 
-            // Create buttons for selecting quantity
-            const quantityRow = new ActionRowBuilder().addComponents(
-              new ButtonBuilder().setCustomId(`buy_${baitType}_1`).setLabel("Buy 1").setStyle(ButtonStyle.Primary),
-              new ButtonBuilder().setCustomId(`buy_${baitType}_5`).setLabel("Buy 5").setStyle(ButtonStyle.Primary),
-              new ButtonBuilder().setCustomId(`buy_${baitType}_10`).setLabel("Buy 10").setStyle(ButtonStyle.Primary),
-              new ButtonBuilder().setCustomId(`buy_${baitType}_20`).setLabel("Buy 20").setStyle(ButtonStyle.Primary),
-              new ButtonBuilder().setCustomId(`buy_${baitType}_100`).setLabel("Buy 100").setStyle(ButtonStyle.Primary)
-            );
-
+            // Instead of handling bait purchases here, direct users to use the /buybait command
             await interaction.reply({
-              content: `How many ${baitType.charAt(0).toUpperCase() + baitType.slice(1)} Baits would you like to buy?`,
-              components: [quantityRow],
-              ephemeral: true,
+              content: "To buy bait in bulk, please use the `/buybait` command.",
+              flags: MessageFlags.Ephemeral,
             });
             break;
 
-          default:
-            // Dynamically handle bait purchase buttons
-            if (interaction.customId.startsWith("buy_premium_bait") ||
-                interaction.customId.startsWith("buy_golden_bait") ||
-                interaction.customId.startsWith("buy_legendary_bait")) {
-              await interaction.deferReply({ ephemeral: true }); // Acknowledge the interaction immediately
-
-              const [baitTypeSelected, quantitySelected] = interaction.customId.split("_").slice(1); // Extract bait type and quantity
-              const baitPricesSelected = {
-                premium: 30,
-                golden: 150,
-                legendary: 400,
-              };
-              const baitPriceSelected = baitPricesSelected[baitTypeSelected];
-              const quantityNumber = parseInt(quantitySelected); // Convert quantity to number
-              const cost = quantityNumber * baitPriceSelected; // Calculate total cost
-
-              if (user.coins >= cost) {
-                user.coins -= cost;
-                user.bait = `${baitTypeSelected.charAt(0).toUpperCase() + baitTypeSelected.slice(1)} Bait`;
-                user.baitCount += quantityNumber; // Increment bait count
-                updateUserData(userId, user);
-                await interaction.editReply({
-                  content: `✅ You purchased ${quantityNumber} ${baitTypeSelected.charAt(0).toUpperCase() + baitTypeSelected.slice(1)} Baits! You now have ${user.baitCount} ${baitTypeSelected.charAt(0).toUpperCase() + baitTypeSelected.slice(1)} Baits equipped.`,
-                });
-              } else {
-                await interaction.editReply({
-                  content: `❌ You don't have enough coins to buy ${quantityNumber} ${baitTypeSelected.charAt(0).toUpperCase() + baitTypeSelected.slice(1)} Baits. You need ${cost} coins.`,
-                });
-              }
-              return;
-            }
-
-            // Default case for unknown button actions
-            await interaction.reply({ content: "❌ Unknown button action.", ephemeral: true });
+            // Default case for truly unknown buttons
+            await interaction.reply({ content: "❌ Unknown button action.", flags: MessageFlags.Ephemeral });
             break;
         }
       }
@@ -279,7 +237,129 @@ module.exports = (client) => {
 
       // Handle errors gracefully
       if (!interaction.deferred && !interaction.replied) {
-        await interaction.reply({ content: "❌ An error occurred while handling this button interaction.", ephemeral: true });
+        await interaction.reply({ content: "❌ An error occurred while handling this button interaction.", flags: MessageFlags.Ephemeral });
+      }
+    }
+  });
+
+
+  client.on("interactionCreate", async (interaction) => {
+    if (interaction.isButton()) {
+      try {
+        // Handle the View Bait button
+        if (interaction.customId === "view_bait") {
+          await interaction.reply({
+            content: "To buy bait, please use the `/buybait` command.",
+            flags: MessageFlags.Ephemeral
+          });
+          return;
+        }
+
+        // Handle bait buying buttons
+        if (interaction.customId.startsWith("buybait_")) {
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+          // buybait_premium_10
+          const [ , baitType, quantityStr ] = interaction.customId.split("_");
+          const quantity = parseInt(quantityStr);
+
+          const baitPrices = { premium: 30, golden: 150, legendary: 400 };
+          const baitNames = { premium: "Premium Bait", golden: "Golden Bait", legendary: "Legendary Bait" };
+
+          const baitPrice = baitPrices[baitType];
+          const baitName = baitNames[baitType];
+          const cost = baitPrice * quantity;
+
+          const userId = interaction.user.id;
+          const user = getUserData(userId);
+
+          if (user.coins >= cost) {
+            user.coins -= cost;
+            for (let i = 0; i < quantity; i++) user.inventory.push(baitName);
+            updateUserData(userId, user);
+
+            await interaction.editReply({
+              content: `✅ You purchased ${quantity} ${baitName}(s) for ${cost} coins!`
+            });
+          } else {
+            await interaction.editReply({
+              content: `❌ You don't have enough coins to buy ${quantity} ${baitName}(s). You need ${cost} coins.`
+            });
+          }
+          return;
+        }
+
+        // ...other button logic if needed...
+      } catch (error) {
+        console.error("Error handling button interaction:", error);
+        if (!interaction.deferred && !interaction.replied) {
+          await interaction.reply({ content: "❌ An error occurred.", flags: MessageFlags.Ephemeral });
+        }
+      }
+    }
+  });
+
+  client.on("interactionCreate", async (interaction) => {
+    if (interaction.isButton()) {
+      try {
+        // Handle bait buying buttons
+        if (interaction.customId.startsWith("buybait_")) {
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+          const [ , baitType, quantityStr ] = interaction.customId.split("_");
+          const quantity = parseInt(quantityStr);
+
+          const baitPrices = { premium: 30, golden: 150, legendary: 400 };
+          const baitNames = { premium: "Premium Bait", golden: "Golden Bait", legendary: "Legendary Bait" };
+
+          const baitPrice = baitPrices[baitType];
+          const baitName = baitNames[baitType];
+          const cost = baitPrice * quantity;
+
+          const userId = interaction.user.id;
+          const user = getUserData(userId);
+
+          // Initialize baitCounts if not present
+          if (!user.baitCounts) user.baitCounts = { premium: 0, golden: 0, legendary: 0 };
+
+          if (user.coins >= cost) {
+            user.coins -= cost;
+            user.baitCounts[baitType] += quantity;
+            updateUserData(userId, user);
+
+            await interaction.editReply({
+              content: `✅ You purchased ${quantity} ${baitName}(s) for ${cost} coins! You now have ${user.baitCounts[baitType]} ${baitName}(s).`
+            });
+          } else {
+            await interaction.editReply({
+              content: `❌ You don't have enough coins to buy ${quantity} ${baitName}(s). You need ${cost} coins.`
+            });
+          }
+          return;
+        }
+
+        // Handle bait selection button
+        if (interaction.customId.startsWith("selectbait_")) {
+          await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+          const baitType = interaction.customId.split("_")[1];
+          const baitNames = { premium: "Premium Bait", golden: "Golden Bait", legendary: "Legendary Bait" };
+
+          const userId = interaction.user.id;
+          const user = getUserData(userId);
+
+          user.baitEquipped = baitType;
+          updateUserData(userId, user);
+
+          await interaction.editReply({
+            content: `🎣 You have equipped **${baitNames[baitType]}**!`
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("Error handling button interaction:", error);
+        if (!interaction.deferred && !interaction.replied) {
+          await interaction.reply({ content: "❌ An error occurred.", flags: MessageFlags.Ephemeral });
+        }
       }
     }
   });

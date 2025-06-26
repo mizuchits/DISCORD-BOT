@@ -1,39 +1,37 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { getUserData } = require("../data/userData");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("inventory")
-    .setDescription("View your inventory."),
+    .setDescription("View your inventory and equip bait!"),
   async execute(interaction) {
     const userId = interaction.user.id;
 
     // Get user data
     const user = getUserData(userId);
 
-    if (user.inventory.length === 0) {
-      await interaction.reply({ content: "🧺 Your inventory is empty. Go fishing with `/fish`!", ephemeral: true });
-      return;
-    }
+    // Show bait counts
+    const baitCounts = user.baitCounts || { premium: 0, golden: 0, legendary: 0 };
+    const baitNames = { premium: "Premium Bait", golden: "Golden Bait", legendary: "Legendary Bait" };
 
-    // Count items in the inventory
-    const itemCounts = {};
-    user.inventory.forEach((item) => {
-      itemCounts[item] = (itemCounts[item] || 0) + 1;
+    let desc = `**Your Baits:**\n`;
+    for (const type of ["premium", "golden", "legendary"]) {
+      desc += `- ${baitNames[type]}: ${baitCounts[type] || 0}\n`;
+    }
+    desc += `\n**Equipped Bait:** ${user.baitEquipped ? baitNames[user.baitEquipped] : "None"}`;
+
+    // Bait selection buttons
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("selectbait_premium").setLabel("Equip Premium").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("selectbait_golden").setLabel("Equip Golden").setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId("selectbait_legendary").setLabel("Equip Legendary").setStyle(ButtonStyle.Danger)
+    );
+
+    await interaction.reply({
+      content: desc,
+      components: [row],
+      flags: 64, // ephemeral
     });
-
-    // Create an embed to display the inventory
-    const embed = new EmbedBuilder()
-      .setTitle("🧺 Your Fishing Inventory")
-      .setColor("#00AAFF")
-      .setDescription("Here is what you've caught so far:");
-
-    for (const [item, count] of Object.entries(itemCounts)) {
-      embed.addFields({ name: item, value: `x${count}`, inline: true });
-    }
-
-    embed.addFields({ name: "💰 Coins", value: `${user.coins} coins`, inline: false });
-
-    await interaction.reply({ embeds: [embed], ephemeral: true });
   },
 };

@@ -26,6 +26,9 @@ module.exports = {
       const user = getUserData(userId);
       console.log("User data:", user);
 
+      // Ensure inventory is an array
+      if (!Array.isArray(user.inventory)) user.inventory = [];
+
       // Define fishing items and their base probabilities
       const lootTable = [
         { item: "🐟 Fish", baseChance: 15 }, // 50% chance
