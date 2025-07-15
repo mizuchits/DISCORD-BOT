@@ -13,13 +13,13 @@
   },
   "904091164209197107": {
     "inventory": [],
-    "coins": 99999999874419,
+    "coins": 99999999715577,
     "rod": "Master Rod",
     "bait": "None",
     "baitCounts": {
       "premium": 0,
       "golden": 0,
-      "legendary": 300
+      "legendary": 401
     },
     "baitEquipped": "legendary"
   }

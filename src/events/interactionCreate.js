@@ -126,9 +126,9 @@ module.exports = (client) => {
           case "view_rods":
             // Create the Rods embed
             const rods = [
-              { name: "Better Rod", price: 50, description: "Catch better fish!" },
-              { name: "Advanced Rod", price: 200, description: "Catch more fish and better items!" },
-              { name: "Master Rod", price: 500, description: "Significantly increase your chances of rare fish!" },
+              { name: "Better Rod", price: 1500, description: "Catch better fish!" },
+              { name: "Advanced Rod", price: 5000, description: "Catch more fish and better items!" },
+              { name: "Master Rod", price: 20000, description: "Significantly increase your chances of rare fish!" },
             ];
 
             const rodsEmbed = new EmbedBuilder()
@@ -152,9 +152,9 @@ module.exports = (client) => {
           case "view_baits":
             // Create the Baits embed
             const baits = [
-              { name: "Premium Bait", price: 30, description: "Increase your chances of rare fish!" },
-              { name: "Golden Bait", price: 150, description: "Greatly increase your chances of rare fish!" },
-              { name: "Legendary Bait", price: 400, description: "Almost guarantee rare fish and reduce trash!" },
+              { name: "Premium Bait", price: 100, description: "Increase your chances of rare fish!" },
+              { name: "Golden Bait", price: 450, description: "Greatly increase your chances of rare fish!" },
+              { name: "Legendary Bait", price: 750, description: "Almost guarantee rare fish and reduce trash!" },
             ];
 
             const baitsEmbed = new EmbedBuilder()
