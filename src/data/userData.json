@@ -12,8 +12,14 @@
     "baitEquipped": null
   },
   "904091164209197107": {
-    "inventory": [],
-    "coins": 99999999715577,
+    "inventory": [
+      "🗑️ Trash",
+      "🗑️ Trash",
+      "🗑️ Trash",
+      "🗑️ Trash",
+      "🪸 Coral"
+    ],
+    "coins": 99999999715927,
     "rod": "Master Rod",
     "bait": "None",
     "baitCounts": {
@@ -21,6 +27,21 @@
       "golden": 0,
       "legendary": 401
     },
-    "baitEquipped": "legendary"
+    "baitEquipped": "legendary",
+    "xp": 70,
+    "level": 4
+  },
+  "605102832282107930": {
+    "coins": 130,
+    "baitCounts": {
+      "premium": 30,
+      "golden": 0,
+      "legendary": 0
+    },
+    "baitEquipped": null,
+    "inventory": [],
+    "rod": "Basic Rod",
+    "xp": 94,
+    "level": 1
   }
 }

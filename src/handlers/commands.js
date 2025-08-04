@@ -41,21 +41,20 @@ module.exports = (client) => {
 
   (async () => {
     try {
-      const guildId = "1376898795064787007"; // Replace with your Discord server (guild) ID
-      console.log("Registering commands for guild:", guildId);
+      console.log("Registering global commands...");
       await rest.put(
-        Routes.applicationGuildCommands(config.GeneralInformation.BotId, guildId),
+        Routes.applicationCommands(config.GeneralInformation.BotId),
         { body: commands },
       );
 
       logger.success({
         type: "commands",
-        message: "Successfully registered guild-specific application commands.",
+        message: "Successfully registered global application commands.",
       });
     } catch (error) {
       logger.error({
         type: "commands",
-        message: "Error while registering guild-specific application commands.",
+        message: "Error while registering global application commands.",
       });
       console.error("Command registration error:", error);
     }

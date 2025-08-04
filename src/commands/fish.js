@@ -1,6 +1,29 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { getUserData, updateUserData } = require("../data/userData");
 
+function getXpForLevel(level) {
+  return 100 + (level - 1) * 50;
+}
+
+const xpValues = {
+  "🐟 Fish": 10,
+  "🦀 Crab": 12,
+  "🗑️ Trash": 2,
+  "🐠 Tropical Fish": 20,
+  "🪸 Coral": 15,
+  "🐡 Rare Fish": 30,
+  "🦑 Squid": 25,
+  "🟫 Common Chest": 40,
+  "🟦 Rare Chest": 80,
+  "🟨 Legendary Chest": 200
+};
+
+const chestRewards = {
+  "🟫 Common Chest": { min: 300, max: 700 },
+  "🟦 Rare Chest": { min: 1000, max: 2000 },
+  "🟨 Legendary Chest": { min: 3000, max: 10000 }
+};
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("fish")
@@ -28,6 +51,10 @@ module.exports = {
 
       // Ensure inventory is an array
       if (!Array.isArray(user.inventory)) user.inventory = [];
+
+      // Ensure xp and level are set
+      if (typeof user.xp !== "number") user.xp = 0;
+      if (typeof user.level !== "number") user.level = 1;
 
       // Define fishing items and their base probabilities
       const lootTable = [
@@ -103,17 +130,11 @@ module.exports = {
 
       console.log(`Number of items to catch: ${numberOfItems}`);
 
-      // Chest rewards config
-      const chestRewards = {
-        "🟫 Common Chest": { min: 300, max: 700 },
-        "🟦 Rare Chest": { min: 1000, max: 2000 },
-        "🟨 Legendary Chest": { min: 3000, max: 10000 }
-      };
-
       // Reset caughtItems for this interaction
       const caughtItems = [];
       let totalChestCoins = 0;
       let chestMessages = [];
+      let gainedXp = 0;
 
       for (let i = 0; i < numberOfItems; i++) {
         const randomRoll = Math.random() * 100;
@@ -123,6 +144,7 @@ module.exports = {
           cumulativeChance += loot.baseChance;
           if (randomRoll <= cumulativeChance) {
             caughtItems.push(loot.item);
+            gainedXp += xpValues[loot.item] || 0;
 
             // If it's a chest, give coins instead of adding to inventory
             if (chestRewards[loot.item]) {
@@ -150,7 +172,14 @@ module.exports = {
 
       console.log("Item counts:", itemCounts);
 
-      // Update user data
+      // XP and Level up logic
+      user.xp += gainedXp;
+      let leveledUp = false;
+      while (user.xp >= getXpForLevel(user.level)) {
+        user.xp -= getXpForLevel(user.level);
+        user.level += 1;
+        leveledUp = true;
+      }
       updateUserData(userId, user);
 
       // Create an embed to display the newly caught items
@@ -169,6 +198,11 @@ module.exports = {
       if (chestMessages.length > 0) {
         embed.addFields({ name: "Chests Opened", value: chestMessages.join("\n"), inline: false });
       }
+      embed.addFields({ name: "XP Gained", value: `+${gainedXp} XP`, inline: true });
+      if (leveledUp) {
+        embed.addFields({ name: "Level Up!", value: `🎉 You reached level ${user.level}!`, inline: false });
+      }
+      embed.setFooter({ text: `Level: ${user.level} | XP: ${user.xp}/${getXpForLevel(user.level)}` });
 
       // Create buttons for further actions
       const row = new ActionRowBuilder().addComponents(
