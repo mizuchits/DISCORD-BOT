@@ -84,6 +84,12 @@ module.exports = {
         }
       });
 
+      const baitNames = { premium: "Premium Bait", golden: "Golden Bait", legendary: "Legendary Bait" };
+      const equippedType = user.baitEquipped;
+      const equippedName = equippedType ? baitNames[equippedType] : "None";
+      const equippedCount = equippedType ? (user.baitCounts?.[equippedType] || 0) : 0;
+      const baitLine = `Bait equipped: ${equippedName}${equippedType ? ` (${equippedCount} remaining)` : ""}`;
+
       if (user.baitCount > 0) {
         console.log(`Applying bait buff: ${user.bait} (${user.baitCount} remaining)`);
 
@@ -186,7 +192,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setTitle(`🎣 Fishing Game - ${username}`)
         .setDescription(
-          `Bait equipped: ${user.bait} (${user.baitCount} remaining)\nHere are the items you caught:`
+          `${baitLine}\nHere are the items you caught:`
         )
         .setColor("#00AAFF");
 

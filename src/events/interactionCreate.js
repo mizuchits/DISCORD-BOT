@@ -149,13 +149,12 @@ module.exports = (client) => {
             await interaction.update({ embeds: [rodsEmbed], components: [rodsRow] });
             break;
 
-          case "view_baits":
-            // Create the Baits embed
-            const baits = [
-              { name: "Premium Bait", price: 100, description: "Increase your chances of rare fish!" },
-              { name: "Golden Bait", price: 450, description: "Greatly increase your chances of rare fish!" },
-              { name: "Legendary Bait", price: 750, description: "Almost guarantee rare fish and reduce trash!" },
-            ];
+            case "view_baits":
+            await interaction.reply({
+              content: "To buy bait, please use the `/buybait` command.",
+              flags: MessageFlags.Ephemeral
+            });
+            break;
 
             const baitsEmbed = new EmbedBuilder()
               .setTitle("🛒 Fishing Shop - Baits")
