@@ -8,7 +8,7 @@ module.exports = {
   async execute(interaction) {
     const userId = interaction.user.id;
 
-    // Get user data
+    
     const user = getUserData(userId);
 
     if (user.inventory.length === 0) {
@@ -16,23 +16,23 @@ module.exports = {
       return;
     }
 
-    // Count items in the inventory
+    
     const itemCounts = {};
     user.inventory.forEach((item) => {
       itemCounts[item] = (itemCounts[item] || 0) + 1;
     });
 
-    // Calculate earnings (e.g., 10 coins per item)
+    
     const earnings = user.inventory.length * 10;
 
     // Reset inventory
     user.inventory = [];
     user.coins += earnings;
 
-    // Update user data
+    
     updateUserData(userId, user);
 
-    // Create an embed to display the sold items and earnings
+    
     const embed = new EmbedBuilder()
       .setTitle("💰 Items Sold")
       .setDescription("You sold the following items:")

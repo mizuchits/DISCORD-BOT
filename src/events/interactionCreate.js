@@ -337,7 +337,7 @@ module.exports = (client) => {
           return;
         }
 
-        // Handle bait selection button
+
         if (interaction.customId.startsWith("selectbait_")) {
           await interaction.deferReply({ flags: MessageFlags.Ephemeral });
           const baitType = interaction.customId.split("_")[1];

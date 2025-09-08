@@ -8,10 +8,10 @@ module.exports = {
   async execute(interaction) {
     const userId = interaction.user.id;
 
-    // Get user data
+    
     const user = getUserData(userId);
 
-    // Show bait counts
+    
     const baitCounts = user.baitCounts || { premium: 0, golden: 0, legendary: 0 };
     const baitNames = { premium: "Premium Bait", golden: "Golden Bait", legendary: "Legendary Bait" };
 
@@ -21,7 +21,7 @@ module.exports = {
     }
     desc += `\n**Equipped Bait:** ${user.baitEquipped ? baitNames[user.baitEquipped] : "None"}`;
 
-    // Bait selection buttons
+    
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("selectbait_premium").setLabel("Equip Premium").setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId("selectbait_golden").setLabel("Equip Golden").setStyle(ButtonStyle.Success),
@@ -31,7 +31,7 @@ module.exports = {
     await interaction.reply({
       content: desc,
       components: [row],
-      flags: 64, // ephemeral
+      flags: 64, 
     });
   },
 };

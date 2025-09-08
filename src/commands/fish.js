@@ -32,31 +32,31 @@ module.exports = {
     try {
       console.log("Executing /fish command...");
 
-      // Check if the interaction has already been acknowledged
+      
       if (interaction.deferred || interaction.replied) {
         console.error("Interaction already acknowledged.");
         return;
       }
 
-      // Acknowledge the interaction immediately
+      
       await interaction.deferReply();
 
       const userId = interaction.user.id;
-      const username = interaction.user.username; // Get the username of the user
+      const username = interaction.user.username; 
 
-      // Get user data
+      
       console.log(`Fetching user data for userId: ${userId}`);
       const user = getUserData(userId);
       console.log("User data:", user);
 
-      // Ensure inventory is an array
+      
       if (!Array.isArray(user.inventory)) user.inventory = [];
 
       // Ensure xp and level are set
       if (typeof user.xp !== "number") user.xp = 0;
       if (typeof user.level !== "number") user.level = 1;
 
-      // Define fishing items and their base probabilities
+      
       const lootTable = [
         { item: "🐟 Fish", baseChance: 14 },
         { item: "🦀 Crab", baseChance: 20 },
@@ -65,22 +65,22 @@ module.exports = {
         { item: "🪸 Coral", baseChance: 4 },
         { item: "🐡 Rare Fish", baseChance: 2 },
         { item: "🦑 Squid", baseChance: 1.5 },
-        // Chests
+        
         { item: "🟫 Common Chest", baseChance: 2 },      // 2%
         { item: "🟦 Rare Chest", baseChance: 1 },        // 1%
         { item: "🟨 Legendary Chest", baseChance: 0.5 }, // 0.5%
       ];
 
-      // Adjust probabilities based on rod and bait
+      
       lootTable.forEach((loot) => {
         if (user.rod === "Better Rod") {
-          if (["🐠 Tropical Fish", "🪸 Coral"].includes(loot.item)) loot.baseChance += 5; // Increase chance for better items
+          if (["🐠 Tropical Fish", "🪸 Coral"].includes(loot.item)) loot.baseChance += 5; 
         }
         if (user.rod === "Advanced Rod") {
-          if (["🐠 Tropical Fish", "🪸 Coral", "🐡 Rare Fish"].includes(loot.item)) loot.baseChance += 10; // Increase chance for rare items
+          if (["🐠 Tropical Fish", "🪸 Coral", "🐡 Rare Fish"].includes(loot.item)) loot.baseChance += 10; 
         }
         if (user.rod === "Master Rod") {
-          if (["🐠 Tropical Fish", "🪸 Coral", "🐡 Rare Fish", "🦑 Squid"].includes(loot.item)) loot.baseChance += 15; // Significantly increase chance for rare items
+          if (["🐠 Tropical Fish", "🪸 Coral", "🐡 Rare Fish", "🦑 Squid"].includes(loot.item)) loot.baseChance += 15; 
         }
       });
 
@@ -93,7 +93,7 @@ module.exports = {
       if (user.baitCount > 0) {
         console.log(`Applying bait buff: ${user.bait} (${user.baitCount} remaining)`);
 
-        // Apply bait buffs
+        
         lootTable.forEach((loot) => {
           if (user.bait === "Premium Bait" && ["🐡 Rare Fish", "🦑 Squid"].includes(loot.item)) {
             loot.baseChance += 5;
@@ -106,10 +106,10 @@ module.exports = {
           }
         });
 
-        // Decrease bait count
+        
         user.baitCount -= 1;
         if (user.baitCount === 0) {
-          user.bait = "None"; // Reset bait when count reaches zero
+          user.bait = "None"; 
         }
         updateUserData(userId, user);
       } else {
@@ -118,25 +118,25 @@ module.exports = {
 
       console.log("Adjusted loot table:", lootTable);
 
-      // Normalize loot table so total chance is 100
+      
       const totalChance = lootTable.reduce((sum, loot) => sum + loot.baseChance, 0);
       lootTable.forEach(loot => {
         loot.baseChance = (loot.baseChance / totalChance) * 100;
       });
       console.log("Normalized loot table:", lootTable);
 
-      // Calculate total chance after buffs
+      
       const adjustedTotalChance = lootTable.reduce((sum, loot) => sum + loot.baseChance, 0);
       console.log("Total loot table chance after buffs:", adjustedTotalChance);
 
-      // Adjust chances based on rod and bait
-      let numberOfItems = 1; // Default number of items
+      
+      let numberOfItems = 1; 
       if (user.rod === "Advanced Rod") numberOfItems = 3;
       if (user.rod === "Master Rod") numberOfItems = 5;
 
       console.log(`Number of items to catch: ${numberOfItems}`);
 
-      // Reset caughtItems for this interaction
+      
       const caughtItems = [];
       let totalChestCoins = 0;
       let chestMessages = [];
@@ -152,7 +152,7 @@ module.exports = {
             caughtItems.push(loot.item);
             gainedXp += xpValues[loot.item] || 0;
 
-            // If it's a chest, give coins instead of adding to inventory
+            
             if (chestRewards[loot.item]) {
               const reward = Math.floor(
                 Math.random() * (chestRewards[loot.item].max - chestRewards[loot.item].min + 1)
@@ -161,7 +161,7 @@ module.exports = {
               totalChestCoins += reward;
               chestMessages.push(`You opened a ${loot.item} and found 💰 **${reward} coins**!`);
             } else {
-              user.inventory.push(loot.item); // Add to user's inventory
+              user.inventory.push(loot.item); 
             }
             break;
           }
@@ -170,7 +170,7 @@ module.exports = {
 
       console.log("Caught items:", caughtItems);
 
-      // Count each type of newly caught item
+      
       const itemCounts = {};
       caughtItems.forEach((item) => {
         itemCounts[item] = (itemCounts[item] || 0) + 1;
@@ -178,7 +178,7 @@ module.exports = {
 
       console.log("Item counts:", itemCounts);
 
-      // XP and Level up logic
+      
       user.xp += gainedXp;
       let leveledUp = false;
       while (user.xp >= getXpForLevel(user.level)) {
@@ -188,7 +188,7 @@ module.exports = {
       }
       updateUserData(userId, user);
 
-      // Create an embed to display the newly caught items
+      
       const embed = new EmbedBuilder()
         .setTitle(`🎣 Fishing Game - ${username}`)
         .setDescription(
@@ -200,7 +200,7 @@ module.exports = {
         embed.addFields({ name: item, value: `x${count}`, inline: true });
       }
 
-      // Add chest messages if any
+      
       if (chestMessages.length > 0) {
         embed.addFields({ name: "Chests Opened", value: chestMessages.join("\n"), inline: false });
       }
@@ -210,7 +210,7 @@ module.exports = {
       }
       embed.setFooter({ text: `Level: ${user.level} | XP: ${user.xp}/${getXpForLevel(user.level)}` });
 
-      // Create buttons for further actions
+      
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId("fish_again").setLabel("🎣 Fish Again").setStyle(ButtonStyle.Primary),
         new ButtonBuilder().setCustomId("view_inventory").setLabel("🧺 Inventory").setStyle(ButtonStyle.Secondary),
@@ -282,5 +282,5 @@ function simulateFishingRolls(rolls = 10000) {
   console.log(`Total coins from chests: ${totalChestCoins}`);
 }
 
-// Run the simulation
+
 simulateFishingRolls(10000);
