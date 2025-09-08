@@ -55,13 +55,13 @@ module.exports = {
       const userId = interaction.user.id;
       const user = getUserData(userId);
 
-      // Ensure baitCounts exists
+      
       if (!user.baitCounts) user.baitCounts = { premium: 0, golden: 0, legendary: 0 };
 
       if (user.coins >= cost) {
         user.coins -= cost;
         user.baitCounts[baitType] += quantity;
-        // ❌ Do NOT add bait to inventory!
+        
         updateUserData(userId, user);
 
         await interaction.editReply({
