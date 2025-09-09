@@ -12,8 +12,14 @@
     "baitEquipped": null
   },
   "904091164209197107": {
-    "inventory": [],
-    "coins": 99999999538937,
+    "inventory": [
+      "🗑️ Trash",
+      "🐡 Rare Fish",
+      "🐟 Fish",
+      "🗑️ Trash",
+      "🗑️ Trash"
+    ],
+    "coins": 99999999542077,
     "rod": "Master Rod",
     "bait": "None",
     "baitCounts": {
@@ -22,8 +28,8 @@
       "legendary": 603
     },
     "baitEquipped": "legendary",
-    "xp": 78,
-    "level": 6
+    "xp": 14,
+    "level": 7
   },
   "605102832282107930": {
     "coins": 130,
